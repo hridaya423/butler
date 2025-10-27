@@ -62,7 +62,7 @@ export function SignInForm() {
                 className="text-4xl text-gray-900 leading-tight"
                 style={{ fontFamily: "'Instrument Serif', serif" }}
               >
-                Your  ommand center—minus the wait.
+                Your command center—minus the wait.
               </h1>
               <p className="text-base text-gray-600 leading-relaxed max-w-xl">
                 The functionality is limited because of only 6h of work..Only the Notion importer is wired up to Supabase right nowg
