@@ -527,7 +527,7 @@ function LandingPage({ onGetStarted }: LandingPageProps) {
 
 export default function Home() {
   const handleGetStarted = () => {
-    window.location.href = '#signup';
+    window.location.href = '/auth';
   };
 
   return <LandingPage onGetStarted={handleGetStarted} />;
