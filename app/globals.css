@@ -286,6 +286,87 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+.falling-leaves {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.falling-leaf {
+  position: absolute;
+  top: -12vh;
+  animation: leaf-fall var(--fall-duration, 16s) linear infinite;
+  will-change: transform;
+}
+
+.falling-leaf__sway {
+  display: block;
+  animation: leaf-sway var(--sway-duration, 4s) ease-in-out infinite alternate;
+}
+
+.falling-leaf__inner {
+  position: relative;
+  display: block;
+  animation: leaf-spin var(--spin-duration, 12s) ease-in-out infinite;
+  transform-origin: 50% 20%;
+  will-change: transform;
+}
+
+.falling-leaf__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.falling-leaf__veins {
+  stroke: rgba(88, 42, 20, var(--leaf-vein-opacity, 0.4));
+}
+
+.falling-leaf__veins path {
+  fill: none;
+}
+
+@keyframes leaf-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0);
+  }
+
+  100% {
+    transform: translate3d(0, 110vh, 0);
+  }
+}
+
+@keyframes leaf-sway {
+  0% {
+    transform: translateX(-18px);
+  }
+
+  50% {
+    transform: translateX(18px);
+  }
+
+  100% {
+    transform: translateX(-12px);
+  }
+}
+
+@keyframes leaf-spin {
+  0% {
+    transform: rotate(calc(var(--leaf-tilt, 0deg) + 0deg));
+  }
+
+  50% {
+    transform: rotate(calc(var(--leaf-tilt, 0deg) + 170deg));
+  }
+
+  100% {
+    transform: rotate(calc(var(--leaf-tilt, 0deg) + 360deg));
+  }
+}
+
 /* Smooth scroll behavior */
 html {
   scroll-behavior: smooth;
@@ -569,7 +650,6 @@ html {
   }
 
   img, svg, video, canvas, audio, iframe, embed, object {
-    vertical-align: middle;
     display: block;
   }
 
@@ -2726,6 +2806,7 @@ html {
 }
 
 .glass-effect {
+  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   background: #ffffffb3;
   border: 1px solid #ffffff4d;

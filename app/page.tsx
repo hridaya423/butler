@@ -2,7 +2,8 @@
 import { motion, useScroll, useTransform } from 'motion/react';
 import { useState, useRef } from 'react';
 import { Button } from '../components/ui/button';
-import { ArrowRight, CheckCircle2, Sparkles, Calendar, Mail, MessageSquare, Twitter, GraduationCap, Bell, Zap, Clock, Users, LayoutGrid, Star, Play, Github } from 'lucide-react';
+import { FallingLeaves } from '../components/ui/falling-leaves';
+import { Sparkles, Calendar, Mail, MessageSquare, Twitter, GraduationCap, Bell, Clock, LayoutGrid, Github } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 
 interface LandingPageProps {
@@ -46,7 +47,8 @@ function LandingPage({ onGetStarted }: LandingPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] overflow-hidden">
+    <div className="relative min-h-screen bg-[#FAF9F6] overflow-hidden">
+      <FallingLeaves leafCount={24} />
       <motion.nav
         className="fixed top-0 left-0 right-0 z-50 bg-[#FAF9F6]/90 backdrop-blur-xl border-b border-gray-200/50"
         initial={{ y: -100 }}
