@@ -83,10 +83,10 @@ export function NotionSyncButton({ onSyncComplete }: { onSyncComplete?: () => vo
       <Button
         variant="outline"
         size="sm"
-        className="gap-2"
+        className="gap-2 h-9 text-xs font-medium bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 hover:border-neutral-300 transition-all shadow-sm"
         onClick={() => setShowDialog(true)}
       >
-        <FileText className="w-4 h-4" />
+        <FileText className="w-3.5 h-3.5" />
         Sync Notion
       </Button>
 

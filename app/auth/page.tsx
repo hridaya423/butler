@@ -12,7 +12,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     supabase.auth.getSession().then((result: any) => {
       const data = result.data;
       const session: Session | null = data?.session ?? null;
@@ -26,8 +26,8 @@ export default function AuthPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
       </div>
     );
   }

@@ -20,7 +20,7 @@ type NormalizedAssignment = {
   priority: "low" | "medium" | "high";
   description: string;
 };
-  
+
 export interface AssignmentInsights {
   summary: string;
   immediateActions: Array<{
@@ -46,46 +46,6 @@ export interface AssignmentInsights {
     note?: string;
   }>;
 }
-
-const SUBJECT_TIPS: Record<string, string[]> = {
-  mathematics: [
-    "Break problems into smaller steps and show each working line.",
-    "Review example questions before attempting homework.",
-    "Use quick practice sheets or Sparx tasks to reinforce weaker skills.",
-  ],
-  english: [
-    "Outline key arguments before writing longer responses.",
-    "Collect quotes or evidence in a quick reference list.",
-    "Read work aloud to catch grammar or clarity issues.",
-  ],
-  science: [
-    "Summarise each topic in a short mind map before revising.",
-    "Highlight formulas or definitions that appear in the assignment.",
-    "Use practice questions to test your understanding after revising notes.",
-  ],
-  french: [
-    "Revise vocabulary in short bursts and group related words together.",
-    "Practice pronunciation using online audio resources or school recordings.",
-    "Write a few sample sentences using the new grammar you need.",
-  ],
-  geography: [
-    "Review case studies and keep key statistics at the top of your notes.",
-    "Draw quick diagrams or sketch maps to explain concepts.",
-    "Check past lessons for teacher hints on what to emphasise.",
-  ],
-};
-
-const FALLBACK_TIPS = [
-  "Skim lesson notes before you start so everything feels familiar.",
-  "Work in focused 25-minute blocks with a short break between them.",
-  "Note any questions for your teacher so they can help early.",
-];
-
-const MINUTES_BY_PRIORITY: Record<"low" | "medium" | "high", number> = {
-  low: 35,
-  medium: 55,
-  high: 85,
-};
 
 const formatDate = (date: Date | null) => {
   if (!date) return "No due date";
@@ -130,9 +90,6 @@ const buildFallbackInsights = (assignments: AssignmentInput[]): AssignmentInsigh
       return daysBetween(now, assignment.dueDate) <= 3;
     })
     .sort((a, b) => {
-      if (a.priority !== b.priority) {
-        return MINUTES_BY_PRIORITY[b.priority] - MINUTES_BY_PRIORITY[a.priority];
-      }
       const aTime = a.dueDate?.getTime() ?? Number.POSITIVE_INFINITY;
       const bTime = b.dueDate?.getTime() ?? Number.POSITIVE_INFINITY;
       return aTime - bTime;
@@ -154,22 +111,20 @@ const buildFallbackInsights = (assignments: AssignmentInput[]): AssignmentInsigh
     });
 
   const schedule: AssignmentInsights["suggestedSchedule"] = [];
-  const sortedByDue = [...normalised].sort((a, b) => {
-    const aTime = a.dueDate?.getTime() ?? Number.POSITIVE_INFINITY;
-    const bTime = b.dueDate?.getTime() ?? Number.POSITIVE_INFINITY;
-    return aTime - bTime;
-  });
+  const sortedByDue = [...normalised]
+    .filter(a => a.dueDate)
+    .sort((a, b) => {
+      const aTime = a.dueDate?.getTime() ?? Number.POSITIVE_INFINITY;
+      const bTime = b.dueDate?.getTime() ?? Number.POSITIVE_INFINITY;
+      return aTime - bTime;
+    });
 
-  sortedByDue.slice(0, 5).forEach((assignment, index) => {
-    const label =
-      index === 0
-        ? "Today"
-        : assignment.dueDate
-          ? formatDate(assignment.dueDate)
-          : "When you have a spare slot";
+  sortedByDue.slice(0, 5).forEach((assignment) => {
+    if (!assignment.dueDate) return;
 
+    const label = formatDate(assignment.dueDate);
     const notes = assignment.subject
-      ? `Focus on the key points for ${assignment.subject}.`
+      ? `Focus on ${assignment.subject}.`
       : undefined;
 
     schedule.push({
@@ -178,19 +133,6 @@ const buildFallbackInsights = (assignments: AssignmentInput[]): AssignmentInsigh
       notes,
     });
   });
-
-  if (schedule.length === 0) {
-    schedule.push(
-      {
-        day: "Today",
-        focus: "Use this free time to review past material or get ahead.",
-      },
-      {
-        day: "Tomorrow",
-        focus: "Plan your next study session or revise notes.",
-      },
-    );
-  }
 
   const conflicts = Object.values(
     normalised.reduce<Record<string, NormalizedAssignment[]>>((acc, assignment) => {
@@ -207,70 +149,21 @@ const buildFallbackInsights = (assignments: AssignmentInput[]): AssignmentInsigh
       return `${date}: ${items.map((item) => item.title).join(", ")}`;
     });
 
-  const tipsMap = new Map<string, Set<string>>();
-  normalised.forEach((assignment) => {
-    const subjectKey = assignment.subject?.toLowerCase();
-    const subjectTips =
-      (subjectKey && SUBJECT_TIPS[subjectKey as keyof typeof SUBJECT_TIPS]) ??
-      SUBJECT_TIPS["english"] ??
-      null;
-
-    const tipList = Array.isArray(subjectTips) ? subjectTips : FALLBACK_TIPS;
-    const bucketKey = assignment.subject ?? "General";
-
-    if (!tipsMap.has(bucketKey)) {
-      tipsMap.set(bucketKey, new Set<string>());
-    }
-
-    tipList.forEach((tip) => tipsMap.get(bucketKey)!.add(tip));
-  });
-
-  if (tipsMap.size === 0) {
-    tipsMap.set("General", new Set(FALLBACK_TIPS));
-  }
-
-  const studyTips = Array.from(tipsMap.entries()).map(([subject, tips]) => ({
-    subject,
-    tips: Array.from(tips).slice(0, 3),
-  }));
-
-  const timeEstimates = normalised.slice(0, 6).map((assignment) => {
-    let minutes = MINUTES_BY_PRIORITY[assignment.priority];
-
-    if (/essay|booklet|project/i.test(assignment.title + assignment.description)) {
-      minutes += 20;
-    } else if (/revision|quiz|worksheet/i.test(assignment.title + assignment.description)) {
-      minutes -= 10;
-    }
-
-    minutes = Math.max(25, Math.min(120, Math.round(minutes / 5) * 5));
-
-    return {
-      title: assignment.title,
-      minutes,
-      note:
-        assignment.dueDate && daysBetween(now, assignment.dueDate) <= 1
-          ? "Plan time tonight so you can submit without last-minute stress."
-          : undefined,
-    };
-  });
-
   const total = normalised.length;
   const dueSoon = immediate.length;
   const summary =
     total === 0
-      ? "No pending work right now—use the free space to review or explore something new."
-      : `You have ${total} assignment${total === 1 ? "" : "s"} waiting. Focus first on ${
-          dueSoon > 0 ? immediate[0].title : sortedByDue[0]?.title ?? "your next priority task"
-        } and spread the rest across the week.`;
+      ? "No pending work right now."
+      : `You have ${total} assignment${total === 1 ? "" : "s"} pending. ${dueSoon > 0 ? "Some items need attention soon." : "You're on track."
+      }`;
 
   return {
     summary,
     immediateActions: immediate,
     suggestedSchedule: schedule,
     conflicts,
-    studyTips,
-    timeEstimates,
+    studyTips: [],
+    timeEstimates: [],
   };
 };
 
@@ -291,44 +184,44 @@ const mergeInsights = (
   const immediate =
     Array.isArray(parsed.immediateActions) && parsed.immediateActions.length > 0
       ? parsed.immediateActions.map((item) => {
-          const title =
-            typeof item.title === "string" && item.title.trim().length > 0
-              ? item.title.trim()
-              : "Priority task";
+        const title =
+          typeof item.title === "string" && item.title.trim().length > 0
+            ? item.title.trim()
+            : "Priority task";
 
-          return {
-            title,
-            dueDate:
-              typeof item.dueDate === "string" && item.dueDate.length > 0
-                ? item.dueDate
-                : null,
-            subject: typeof item.subject === "string" ? item.subject : null,
-            priority:
-              item.priority === "high" || item.priority === "medium" || item.priority === "low"
-                ? item.priority
-                : "medium",
-            reason:
-              typeof item.reason === "string" && item.reason.trim().length > 0
-                ? item.reason.trim()
-                : "Important to tackle this early.",
-          };
-        })
+        return {
+          title,
+          dueDate:
+            typeof item.dueDate === "string" && item.dueDate.length > 0
+              ? item.dueDate
+              : null,
+          subject: typeof item.subject === "string" ? item.subject : null,
+          priority:
+            item.priority === "high" || item.priority === "medium" || item.priority === "low"
+              ? item.priority
+              : "medium",
+          reason:
+            typeof item.reason === "string" && item.reason.trim().length > 0
+              ? item.reason.trim()
+              : "Important to tackle this early.",
+        };
+      })
       : fallback.immediateActions;
 
   const schedule =
     Array.isArray(parsed.suggestedSchedule) && parsed.suggestedSchedule.length > 0
       ? parsed.suggestedSchedule
-          .map((entry) => ({
-            day: typeof entry.day === "string" ? entry.day : undefined,
-            focus: typeof entry.focus === "string" ? entry.focus : undefined,
-            notes: typeof entry.notes === "string" ? entry.notes : undefined,
-          }))
-          .filter((entry) => entry.day && entry.focus)
-          .map((entry) => ({
-            day: entry.day!,
-            focus: entry.focus!,
-            notes: entry.notes,
-          }))
+        .map((entry) => ({
+          day: typeof entry.day === "string" ? entry.day : undefined,
+          focus: typeof entry.focus === "string" ? entry.focus : undefined,
+          notes: typeof entry.notes === "string" ? entry.notes : undefined,
+        }))
+        .filter((entry) => entry.day && entry.focus)
+        .map((entry) => ({
+          day: entry.day!,
+          focus: entry.focus!,
+          notes: entry.notes,
+        }))
       : fallback.suggestedSchedule;
 
   const conflicts =
@@ -339,36 +232,36 @@ const mergeInsights = (
   const studyTips =
     Array.isArray(parsed.studyTips) && parsed.studyTips.length > 0
       ? parsed.studyTips
-          .map((entry) => ({
-            subject: typeof entry.subject === "string" ? entry.subject : undefined,
-            tips: Array.isArray(entry.tips)
-              ? entry.tips.filter((tip): tip is string => typeof tip === "string" && tip.length > 0)
-              : [],
-          }))
-          .filter((entry) => entry.subject && entry.tips.length > 0)
-          .map((entry) => ({
-            subject: entry.subject!,
-            tips: entry.tips.slice(0, 3),
-          }))
+        .map((entry) => ({
+          subject: typeof entry.subject === "string" ? entry.subject : undefined,
+          tips: Array.isArray(entry.tips)
+            ? entry.tips.filter((tip): tip is string => typeof tip === "string" && tip.length > 0)
+            : [],
+        }))
+        .filter((entry) => entry.subject && entry.tips.length > 0)
+        .map((entry) => ({
+          subject: entry.subject!,
+          tips: entry.tips.slice(0, 3),
+        }))
       : fallback.studyTips;
 
   const timeEstimates =
     Array.isArray(parsed.timeEstimates) && parsed.timeEstimates.length > 0
       ? parsed.timeEstimates
-          .map((entry) => ({
-            title: typeof entry.title === "string" ? entry.title : undefined,
-            minutes:
-              typeof entry.minutes === "number" && Number.isFinite(entry.minutes)
-                ? Math.round(entry.minutes)
-                : undefined,
-            note: typeof entry.note === "string" ? entry.note : undefined,
-          }))
-          .filter((entry) => entry.title && entry.minutes)
-          .map((entry) => ({
-            title: entry.title!,
-            minutes: Math.max(20, Math.min(180, entry.minutes!)),
-            note: entry.note,
-          }))
+        .map((entry) => ({
+          title: typeof entry.title === "string" ? entry.title : undefined,
+          minutes:
+            typeof entry.minutes === "number" && Number.isFinite(entry.minutes)
+              ? Math.round(entry.minutes)
+              : undefined,
+          note: typeof entry.note === "string" ? entry.note : undefined,
+        }))
+        .filter((entry) => entry.title && entry.minutes)
+        .map((entry) => ({
+          title: entry.title!,
+          minutes: Math.max(20, Math.min(180, entry.minutes!)),
+          note: entry.note,
+        }))
       : fallback.timeEstimates;
 
   return {
@@ -412,15 +305,15 @@ Guidelines:
 
 Assignments:
 ${assignments
-  .map((assignment, index) => {
-    const due = assignment.due_date ? new Date(assignment.due_date).toISOString() : "null";
-    return `${index + 1}. Title: ${assignment.title}
+      .map((assignment, index) => {
+        const due = assignment.due_date ? new Date(assignment.due_date).toISOString() : "null";
+        return `${index + 1}. Title: ${assignment.title}
    Subject: ${assignment.subject ?? "Unknown"}
    Due: ${due}
    Priority: ${assignment.priority}
    Notes: ${assignment.description ?? "None"}`;
-  })
-  .join("\n")}
+      })
+      .join("\n")}
 
 Respond with JSON only.`;
 
