@@ -62,12 +62,12 @@ export const ValueProp = () => {
 
                         <h2 className="text-4xl md:text-5xl font-semibold text-neutral-900 leading-tight tracking-tight">
                             One intelligent<br />
-                            <span className="text-orange-500">command center.</span>
+                            <span className="text-orange-500">framework.</span>
                         </h2>
 
                         <div className="space-y-4 text-neutral-500 leading-relaxed font-light text-lg">
                             <p>
-                                Butler unifies your workflow. AI curates what's urgent, blocks distractions,
+                                Butler is the framework that unifies your workflow. AI curates what's urgent, blocks distractions,
                                 and automates the coordination work.
                             </p>
                         </div>

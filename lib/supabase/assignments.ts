@@ -1,9 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from './client';
 import type { Assignment, AssignmentPriority, AssignmentStatus } from '../types/assignment';
 
 export async function getAssignments(status?: 'pending' | 'completed' | 'archived') {
   try {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return [];
 
     let query = supabase
       .from('assignments')
@@ -14,14 +18,70 @@ export async function getAssignments(status?: 'pending' | 'completed' | 'archive
       query = query.eq('status', status);
     }
 
-    const { data, error } = await query;
+    const { data: assignmentsData, error: assignmentsError } = await query;
 
-    if (error) {
-      console.error('Error fetching assignments:', error);
+    if (assignmentsError) {
+      console.error('Error fetching assignments:', assignmentsError);
       return [];
     }
 
-    return (data as Assignment[]) || [];
+    let allItems: Assignment[] = (assignmentsData as Assignment[]) || [];
+
+    if (!status || status === 'pending') {
+      const { data: prs } = await supabase
+        .from('github_pull_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('state', 'open');
+
+      if (prs) {
+        const prAssignments: Assignment[] = prs.map((pr: any) => ({
+          id: `github-${pr.id}`,
+          user_id: user.id,
+          title: pr.title,
+          description: `Pull Request #${pr.github_pr_number} in ${pr.repo_full_name}`,
+          subject: pr.repo_full_name,
+          due_date: null,
+          status: 'pending',
+          priority: 'medium',
+          source: 'github',
+          external_id: pr.github_pr_id.toString(),
+          created_at: pr.created_at,
+          updated_at: pr.updated_at,
+        }));
+        allItems = [...allItems, ...prAssignments];
+      }
+
+      const { data: slackNotes } = await supabase
+        .from('slack_notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('slack_created_at', { ascending: false });
+
+      if (slackNotes) {
+        const slackAssignments: Assignment[] = slackNotes.map((note: any) => ({
+          id: `slack-${note.id}`,
+          user_id: user.id,
+          title: `Message from ${note.sender_name}`,
+          description: note.text_preview,
+          subject: note.channel_name,
+          due_date: null,
+          status: 'pending',
+          priority: note.priority > 5 ? 'high' : 'medium',
+          source: 'slack',
+          external_id: note.slack_message_ts,
+          created_at: note.created_at,
+          updated_at: note.created_at,
+        }));
+        allItems = [...allItems, ...slackAssignments];
+      }
+    }
+
+    return allItems.sort((a, b) => {
+      const dateA = a.due_date ? new Date(a.due_date).getTime() : new Date(a.created_at).getTime();
+      const dateB = b.due_date ? new Date(b.due_date).getTime() : new Date(b.created_at).getTime();
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Error in getAssignments:', error);
     return [];
@@ -89,15 +149,32 @@ export async function deleteAssignment(id: string) {
 export async function getDashboardStats() {
   try {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: assignments, error } = await supabase
+    if (!user) return null;
+
+    const { data: assignments } = await supabase
       .from('assignments')
-      .select('status, priority, due_date');
+      .select('status, priority, due_date')
+      .eq('user_id', user.id);
 
-    if (error) {
-      console.error('Error fetching stats:', error);
-      return null;
-    }
+    const { count: openIssues } = await supabase
+      .from('github_issues')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('state', 'open');
+
+    const { count: mergedPRs } = await supabase
+      .from('github_pull_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_merged', true);
+
+    const { count: activePRs } = await supabase
+      .from('github_pull_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('state', 'open');
 
     if (!assignments) return null;
 
@@ -133,6 +210,11 @@ export async function getDashboardStats() {
         (assignment) =>
           assignment.status === 'pending' && assignment.priority === 'high',
       ).length,
+      github: {
+        openIssues: openIssues || 0,
+        mergedPRs: mergedPRs || 0,
+        activePRs: activePRs || 0,
+      }
     };
   } catch (error) {
     console.error('Error in getDashboardStats:', error);

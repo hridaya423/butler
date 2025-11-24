@@ -16,12 +16,12 @@ export const HeroSection = () => {
                 >
 
                     <h1 className="text-6xl md:text-8xl font-semibold text-neutral-900 tracking-tight mb-8 leading-[1.1]">
-                        The intelligent inbox<br />
-                        <span className="text-orange-500">for deep work.</span>
+                        Your digital life,<br />
+                        <span className="text-orange-500">one framework.</span>
                     </h1>
 
                     <p className="text-xl text-neutral-500 max-w-xl mx-auto mb-12 leading-relaxed font-light">
-                        Butler filters the noise, automates the busywork, and helps you focus on what actually matters.
+                        Butler is the framework that unifies your tools, filters the noise, and helps you focus on what actually matters.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

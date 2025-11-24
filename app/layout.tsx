@@ -17,16 +17,18 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Butler - Your Personal Command Center",
-  description: "Don't let deadlines slip. Connect your life with Butler. Unify Slack, Gmail, Teams, and more into one beautiful, customizable dashboard.",
-  keywords: ["dashboard", "productivity", "integrations", "slack", "gmail", "teams"],
+  title: "Butler - Your Digital Life Framework",
+  description: "A unified framework for managing your digital life. Connect Slack, Gmail, GitHub, Notion, and more into one intelligent command center.",
+  keywords: ["framework", "dashboard", "productivity", "integrations", "slack", "gmail", "notion", "github"],
   authors: [{ name: "Butler" }],
   openGraph: {
-    title: "Butler - Your Personal Command Center",
-    description: "Don't let deadlines slip. Connect your life with Butler.",
+    title: "Butler - Your Digital Life Framework",
+    description: "A unified framework for managing your digital life.",
     type: "website",
   },
 };
+
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
   children,
@@ -35,7 +37,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${instrumentSerif.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

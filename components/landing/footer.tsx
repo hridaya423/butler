@@ -9,8 +9,11 @@ export const Footer = () => {
             <div className="max-w-7xl mx-auto px-6 pt-24">
                 <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-24">
                     <div className="max-w-sm">
+                        <p className="text-sm font-medium text-neutral-400 mb-4 tracking-wide uppercase">
+                            A Framework for Your Digital Life
+                        </p>
                         <p className="text-xl md:text-2xl font-serif text-neutral-400 leading-relaxed">
-                            "For every minute spent organizing, an hour is earned."
+                            &quot;For every minute spent organizing, an hour is earned.&quot;
                         </p>
                         <p className="mt-4 text-sm text-neutral-400 font-medium">
                             — Benjamin Franklin
