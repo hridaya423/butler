@@ -21,13 +21,8 @@ export const FeatureCuration = () => {
                             </h2>
 
                             <p className="text-lg text-neutral-500 leading-relaxed mb-8 max-w-md font-light">
-                                Butler learns what's important to you. It highlights the signals and quietly archives the noise, so you never miss a beat.
+                                Butler learns what&apos;s important to you. It highlights the signals and quietly archives the noise, so you never miss a beat.
                             </p>
-
-                            <div className="flex items-center gap-2 text-sm font-medium text-neutral-900">
-                                <Sparkles className="w-4 h-4 text-orange-500" />
-                                <span>Powered by local LLMs</span>
-                            </div>
                         </motion.div>
                     </div>
 

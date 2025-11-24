@@ -53,8 +53,6 @@ export const ValueProp = () => {
 
                     <div className="space-y-8 relative">
 
-                        <div className="hidden md:block absolute -left-10 top-1/2 w-20 h-px bg-gradient-to-r from-neutral-200 to-orange-200" />
-
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-100">
                             <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
                             <span className="text-xs font-medium text-orange-600 uppercase tracking-wide">The Solution</span>
@@ -67,7 +65,7 @@ export const ValueProp = () => {
 
                         <div className="space-y-4 text-neutral-500 leading-relaxed font-light text-lg">
                             <p>
-                                Butler is the framework that unifies your workflow. AI curates what's urgent, blocks distractions,
+                                Butler is the framework that unifies your workflow. AI curates what&apos;s urgent, blocks distractions,
                                 and automates the coordination work.
                             </p>
                         </div>
