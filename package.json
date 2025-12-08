@@ -24,7 +24,7 @@
     "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.25",
-    "groq-sdk": "^0.34.0",
+    "groq-sdk": "^0.37.0",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.556.0",
