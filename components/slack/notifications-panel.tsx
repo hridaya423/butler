@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -58,7 +58,6 @@ export function NotificationsPanel({
         setNotifications(data.notifications);
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -76,7 +75,6 @@ export function NotificationsPanel({
         prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
       );
     } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
   };
 
@@ -92,7 +90,6 @@ export function NotificationsPanel({
 
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     } catch (error) {
-      console.error('Error marking all as read:', error);
     }
   };
 
@@ -145,11 +142,10 @@ export function NotificationsPanel({
             <button
               key={f}
               onClick={() => setFilter(f as any)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                filter === f
+              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${filter === f
                   ? 'bg-white text-neutral-900 shadow-sm'
                   : 'text-neutral-500 hover:text-neutral-900'
-              }`}
+                }`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
@@ -189,11 +185,10 @@ export function NotificationsPanel({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`bg-white border rounded-xl p-4 hover:shadow-sm transition-all cursor-pointer ${
-                notification.is_read
+              className={`bg-white border rounded-xl p-4 hover:shadow-sm transition-all cursor-pointer ${notification.is_read
                   ? 'border-neutral-100'
                   : 'border-orange-200 bg-orange-50/30'
-              }`}
+                }`}
               onClick={() => {
                 if (!notification.is_read) markAsRead(notification.id);
                 if (notification.permalink) window.open(notification.permalink, '_blank');

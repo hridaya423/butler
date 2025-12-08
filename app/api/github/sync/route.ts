@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -23,13 +23,14 @@ export async function POST() {
     const providerToken = session?.provider_token;
 
     if (!providerToken) {
-      return NextResponse.json(
-        { error: 'No GitHub token found. Please login with GitHub.' },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        success: false,
+        error: 'Token expired',
+        message: 'GitHub token expired. Please re-connect GitHub to continue auto-sync.',
+        needs_reauth: true
+      }, { status: 401 });
     }
 
-    console.log('🔄 Syncing GitHub data for user:', user.id);
 
     const profileResponse = await fetch(`${GITHUB_API}/user`, {
       headers: {
@@ -38,13 +39,15 @@ export async function POST() {
       },
     });
 
+
     if (!profileResponse.ok) {
-      throw new Error('Failed to fetch GitHub profile');
+      const errorText = await profileResponse.text();
+      throw new Error(`Failed to fetch GitHub profile: ${profileResponse.status}`);
     }
 
     const profile = await profileResponse.json();
 
-    await supabase.from('github_profiles').upsert({
+    const { error: profileError } = await supabase.from('github_profiles').upsert({
       user_id: user.id,
       github_user_id: profile.id.toString(),
       github_username: profile.login,
@@ -59,7 +62,11 @@ export async function POST() {
       followers: profile.followers,
       following: profile.following,
       last_synced_at: new Date().toISOString(),
-    });
+    }, { onConflict: 'user_id' });
+
+    if (profileError) {
+    } else {
+    }
 
     const reposResponse = await fetch(
       `${GITHUB_API}/user/repos?sort=updated&per_page=100`,
@@ -73,7 +80,6 @@ export async function POST() {
 
     if (reposResponse.ok) {
       const repos = await reposResponse.json();
-      console.log(`📦 Found ${repos.length} repositories`);
 
       const repoData = repos.map((repo: any) => ({
         user_id: user.id,
@@ -100,7 +106,7 @@ export async function POST() {
       }));
 
       if (repoData.length > 0) {
-        await supabase.from('github_repositories').upsert(repoData);
+        await supabase.from('github_repositories').upsert(repoData, { onConflict: 'github_repo_id' });
       }
     }
 
@@ -117,7 +123,6 @@ export async function POST() {
     if (prsResponse.ok) {
       const prsData = await prsResponse.json();
       const prs = prsData.items || [];
-      console.log(`🔀 Found ${prs.length} pull requests`);
 
       const prDetailsPromises = prs.slice(0, 50).map(async (pr: any) => {
         const prUrl = pr.pull_request?.url;
@@ -169,7 +174,7 @@ export async function POST() {
       }));
 
       if (prData.length > 0) {
-        await supabase.from('github_pull_requests').upsert(prData);
+        await supabase.from('github_pull_requests').upsert(prData, { onConflict: 'github_pr_id' });
       }
     }
 
@@ -186,7 +191,6 @@ export async function POST() {
     if (issuesResponse.ok) {
       const issuesData = await issuesResponse.json();
       const issues = issuesData.items || [];
-      console.log(`🐛 Found ${issues.length} issues`);
 
       const issueData = issues.map((issue: any) => {
         const repoFullName = issue.repository_url.split('/repos/')[1];
@@ -218,7 +222,7 @@ export async function POST() {
       });
 
       if (issueData.length > 0) {
-        await supabase.from('github_issues').upsert(issueData);
+        await supabase.from('github_issues').upsert(issueData, { onConflict: 'github_issue_id' });
       }
     }
 
@@ -235,7 +239,6 @@ export async function POST() {
     if (eventsResponse.ok) {
       const events = await eventsResponse.json();
       const pushEvents = events.filter((e: any) => e.type === 'PushEvent');
-      console.log(`💾 Found ${pushEvents.length} recent push events`);
 
       const commits: any[] = [];
 
@@ -259,11 +262,10 @@ export async function POST() {
       });
 
       if (commits.length > 0) {
-        await supabase.from('github_commits').upsert(commits.slice(0, 100));
+        await supabase.from('github_commits').upsert(commits.slice(0, 100), { onConflict: 'commit_sha' });
       }
     }
 
-    console.log('✅ GitHub sync complete');
 
     return NextResponse.json({
       success: true,
@@ -276,7 +278,6 @@ export async function POST() {
       },
     });
   } catch (error: any) {
-    console.error('Error syncing GitHub data:', error);
     return NextResponse.json(
       { error: 'Failed to sync GitHub data', message: error.message },
       { status: 500 }

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import { useState } from "react";
@@ -36,8 +36,18 @@ export function UniversalSyncButton({ onSyncComplete }: { onSyncComplete?: () =>
                 promises.push(
                     fetch('/api/github/sync', { method: 'POST' })
                         .then(async res => {
+                            if (res.status === 401 || res.status === 403) {
+                                throw new Error('REAUTH_GITHUB');
+                            }
+
                             const data = await res.json();
-                            if (data.error) throw new Error(`GitHub: ${data.error}`);
+                            if (data.error) {
+                                const errorLower = data.error.toLowerCase();
+                                if (errorLower.includes('token') || errorLower.includes('expired') || errorLower.includes('invalid') || errorLower.includes('unauthorized') || errorLower.includes('401') || errorLower.includes('403')) {
+                                    throw new Error('REAUTH_GITHUB');
+                                }
+                                throw new Error(`GitHub: ${data.error}`);
+                            }
                             return 'GitHub';
                         })
                 );
@@ -53,9 +63,63 @@ export function UniversalSyncButton({ onSyncComplete }: { onSyncComplete?: () =>
                 promises.push(
                     fetch('/api/slack/sync', { method: 'POST' })
                         .then(async res => {
+                            if (res.status === 401 || res.status === 403) {
+                                throw new Error('REAUTH_SLACK');
+                            }
+
                             const data = await res.json();
-                            if (data.error) throw new Error(`Slack: ${data.error}`);
+                            if (data.error) {
+                                const errorLower = data.error.toLowerCase();
+                                if (errorLower.includes('token') || errorLower.includes('expired') || errorLower.includes('invalid') || errorLower.includes('unauthorized') || errorLower.includes('401') || errorLower.includes('403')) {
+                                    throw new Error('REAUTH_SLACK');
+                                }
+                                throw new Error(`Slack: ${data.error}`);
+                            }
                             return 'Slack';
+                        })
+                );
+            }
+
+            const { data: notionProfile } = await supabase
+                .from('notion_profiles')
+                .select('access_token, default_database_id')
+                .eq('user_id', user.id)
+                .single();
+
+            if (notionProfile?.access_token && notionProfile?.default_database_id) {
+                promises.push(
+                    fetch('/api/notion/sync', { method: 'POST' })
+                        .then(async res => {
+                            if (res.status === 401 || res.status === 403) {
+                                throw new Error('REAUTH_NOTION');
+                            }
+                            const data = await res.json();
+                            if (data.error) {
+                                throw new Error(`Notion: ${data.error}`);
+                            }
+                            return 'Notion';
+                        })
+                );
+            }
+
+            const { data: bromcomProfile } = await supabase
+                .from('bromcom_profiles')
+                .select('email_encrypted')
+                .eq('user_id', user.id)
+                .single();
+
+            if (bromcomProfile?.email_encrypted) {
+                promises.push(
+                    fetch('/api/sync/bromcom', { method: 'POST' })
+                        .then(async res => {
+                            const data = await res.json();
+                            if (data.error) {
+                                if (data.needsCredentials) {
+                                    throw new Error('Bromcom: Credentials needed');
+                                }
+                                throw new Error(`Bromcom: ${data.error}`);
+                            }
+                            return 'Bromcom';
                         })
                 );
             }
@@ -76,20 +140,51 @@ export function UniversalSyncButton({ onSyncComplete }: { onSyncComplete?: () =>
                 .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
                 .map(r => r.reason.message);
 
-            if (success.length > 0) {
-                toastTyped.success(`Synced: ${success.join(', ')}`);
+            const needsGitHubReauth = errors.some(e => e === 'REAUTH_GITHUB');
+            const needsSlackReauth = errors.some(e => e === 'REAUTH_SLACK');
+
+            if (needsGitHubReauth || needsSlackReauth) {
+                const providerName = needsGitHubReauth ? 'GitHub' : 'Slack';
+                const providerKey = needsGitHubReauth ? 'github' : 'slack';
+                toast(`${providerName} token expired`, {
+                    description: 'Your session has expired. Please re-authenticate to continue syncing.',
+                    action: {
+                        label: 'Re-authenticate',
+                        onClick: async () => {
+                            const { data, error } = await supabase.auth.signInWithOAuth({
+                                provider: providerKey as 'github' | 'slack',
+                                options: {
+                                    redirectTo: `${window.location.origin}/auth/callback`,
+                                    scopes: providerKey === 'github' ? 'read:user user:email repo' : 'channels:read chat:write',
+                                    skipBrowserRedirect: false
+                                }
+                            });
+                            if (error) {
+                                toastTyped.error('Failed to start re-authentication');
+                            } else if (data?.url) {
+                                window.location.href = data.url;
+                            }
+                        }
+                    },
+                    duration: 10000
+                });
+            } else {
+                if (success.length > 0) {
+                    toastTyped.success(`Synced: ${success.join(', ')}`);
+                }
+
+                if (errors.length > 0) {
+                    toastTyped.error(`Failed: ${errors.join(', ')}`);
+                }
             }
 
-            if (errors.length > 0) {
-                toastTyped.error(`Failed: ${errors.join(', ')}`);
-            }
+            window.dispatchEvent(new CustomEvent('butler:sync-complete'));
 
             if (onSyncComplete) {
                 onSyncComplete();
             }
 
         } catch (err) {
-            console.error("Sync failed:", err);
             toastTyped.error("Sync failed");
         } finally {
             setSyncing(false);

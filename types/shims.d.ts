@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 declare module "recharts";
 declare module "cmdk";
 declare module "vaul";

@@ -32,7 +32,6 @@ export function PaymentNotificationsPanel() {
       const data = await getPaymentNotifications(filter === 'unread', 50);
       setNotifications(data);
     } catch (error) {
-      console.error('Error loading notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -49,7 +48,6 @@ export function PaymentNotificationsPanel() {
         )
       );
     } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
   };
 
@@ -64,7 +62,6 @@ export function PaymentNotificationsPanel() {
         }))
       );
     } catch (error) {
-      console.error('Error marking all as read:', error);
     }
   };
 

@@ -50,7 +50,6 @@ export function PaymentSettings({ initialProvider = 'stripe' }: PaymentSettingsP
                 });
             }
         } catch (error) {
-            console.error('Error loading settings:', error);
         } finally {
             setLoading(false);
         }
@@ -72,7 +71,6 @@ export function PaymentSettings({ initialProvider = 'stripe' }: PaymentSettingsP
             setApiKeys(prev => ({ ...prev, [activeProvider]: keyValue }));
 
         } catch (error) {
-            console.error('Error saving API key:', error);
         } finally {
             setSaving(false);
         }
@@ -86,13 +84,10 @@ export function PaymentSettings({ initialProvider = 'stripe' }: PaymentSettingsP
 
             if (response.ok) {
                 const data = await response.json();
-                console.log(`Synced ${activeProvider}:`, data);
             } else {
                 const errorData = await response.json();
-                console.error(`Error syncing ${activeProvider}:`, errorData);
             }
         } catch (error) {
-            console.error('Error syncing:', error);
         } finally {
             setSyncing(false);
         }

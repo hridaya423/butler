@@ -44,7 +44,6 @@ export function PaymentNotificationToast() {
           }, index * 500);
         });
       } catch (error) {
-        console.error('Error loading notifications:', error);
       }
     };
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scrapeBromcom } from '@/scripts/scrape-bromcom';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { encrypt, decrypt } from '@/lib/encryption';
 
 export const runtime = 'nodejs';
 
@@ -23,22 +24,47 @@ export async function POST(request: NextRequest) {
       return respond({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    let payload: unknown;
+    let payload: { email?: string; password?: string; saveCredentials?: boolean } = {};
     try {
       payload = await request.json();
-    } catch (parseError) {
-      console.error('Invalid Bromcom sync payload', parseError);
-      return respond({ error: 'Invalid request payload' }, { status: 400 });
+    } catch {
     }
 
-    if (payload === null || typeof payload !== 'object') {
-      return respond({ error: 'Invalid request payload' }, { status: 400 });
-    }
-
-    const { email, password } = payload as { email?: string; password?: string };
+    let { email, password } = payload;
+    const { saveCredentials } = payload;
 
     if (!email || !password) {
-      return respond({ error: 'Bromcom credentials required' }, { status: 400 });
+      const { data: savedProfile } = await supabase
+        .from('bromcom_profiles')
+        .select('email_encrypted, password_encrypted')
+        .eq('user_id', user.id)
+        .single();
+
+      if (savedProfile) {
+        try {
+          email = decrypt(savedProfile.email_encrypted);
+          password = decrypt(savedProfile.password_encrypted);
+        } catch (decryptError) {
+          return respond({ error: 'Saved credentials corrupted. Please re-enter.' }, { status: 400 });
+        }
+      }
+    }
+
+    if (!email || !password) {
+      return respond({ error: 'Bromcom credentials required', needsCredentials: true }, { status: 400 });
+    }
+
+    if (saveCredentials) {
+      const { error: saveError } = await supabase
+        .from('bromcom_profiles')
+        .upsert({
+          user_id: user.id,
+          email_encrypted: encrypt(email),
+          password_encrypted: encrypt(password),
+        }, { onConflict: 'user_id' });
+
+      if (saveError) {
+      }
     }
 
     const { data: syncJob, error: syncJobError } = await supabase
@@ -52,7 +78,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (syncJobError || !syncJob) {
-      console.error('Error creating sync job:', syncJobError);
       return respond({ error: 'Failed to create sync job' }, { status: 500 });
     }
 
@@ -82,7 +107,6 @@ export async function POST(request: NextRequest) {
 
           processed++;
         } catch (err) {
-          console.error('Error saving assignment:', err);
         }
       }
 
@@ -95,13 +119,17 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', syncJob.id);
 
+      await supabase
+        .from('bromcom_profiles')
+        .update({ last_synced_at: new Date().toISOString() })
+        .eq('user_id', user.id);
+
       return respond({
         success: true,
         itemsProcessed: processed,
         total: assignments.length,
       });
     } catch (scraperError: unknown) {
-      console.error('Scraper error:', scraperError);
       const errorMessage = scraperError instanceof Error ? scraperError.message : 'Unknown error';
 
       await supabase
@@ -119,7 +147,6 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error: unknown) {
-    console.error('API error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return respond(
       { error: 'Internal server error', details: errorMessage },
@@ -127,3 +154,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

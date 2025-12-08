@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { CreditCard, Link2 } from 'lucide-react';
+import { CreditCard, Link2, Shield, Brain, Zap } from 'lucide-react';
 import { PaymentSettings } from './payment-settings';
 import { ConnectedAccounts } from './connected-accounts';
+import { AISafetySettings } from './ai-safety-settings';
 
 interface SettingsPageProps {
-  initialTab?: 'accounts' | 'integrations';
+  initialTab?: 'accounts' | 'integrations' | 'ai-safety';
   initialProvider?: 'stripe' | 'lemonsqueezy' | 'polar';
 }
 
@@ -19,6 +20,8 @@ export function SettingsPage({ initialTab = 'integrations', initialProvider = 's
     const tabParam = params.get('tab');
     if (tabParam === 'accounts') {
       setActiveTab('accounts');
+    } else if (tabParam === 'ai-safety') {
+      setActiveTab('ai-safety');
     }
   }, []);
 
@@ -32,6 +35,11 @@ export function SettingsPage({ initialTab = 'integrations', initialProvider = 's
       id: 'accounts' as const,
       label: 'Connected Accounts',
       icon: Link2,
+    },
+    {
+      id: 'ai-safety' as const,
+      label: 'AI Data Control',
+      icon: Shield,
     },
   ];
 
@@ -72,6 +80,7 @@ export function SettingsPage({ initialTab = 'integrations', initialProvider = 's
       >
         {activeTab === 'integrations' && <PaymentSettings initialProvider={initialProvider} />}
         {activeTab === 'accounts' && <ConnectedAccounts />}
+        {activeTab === 'ai-safety' && <AISafetySettings />}
       </motion.div>
     </div>
   );

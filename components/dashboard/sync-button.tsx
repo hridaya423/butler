@@ -57,7 +57,6 @@ export function SyncButton({ onSyncComplete }: { onSyncComplete?: () => void }) 
         throw new Error(data.error || 'Sync failed');
       }
 
-      console.log(`Synced ${data.itemsProcessed} assignments`);
       setShowDialog(false);
 
       setEmail("");
@@ -67,7 +66,6 @@ export function SyncButton({ onSyncComplete }: { onSyncComplete?: () => void }) 
         onSyncComplete();
       }
     } catch (err) {
-      console.error("Sync failed:", err);
       const message = err instanceof Error ? err.message : "Sync failed";
       setError(message);
     } finally {

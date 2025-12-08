@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -62,7 +62,6 @@ export function GmailDashboard() {
       const data = await response.json();
       setProfile(data.profile);
     } catch (error) {
-      console.error('Error loading Gmail profile:', error);
     }
   };
 
@@ -73,7 +72,6 @@ export function GmailDashboard() {
       const data = await response.json();
       setMessages(data.messages || []);
     } catch (error) {
-      console.error('Error loading messages:', error);
     } finally {
       setLoading(false);
     }
@@ -89,7 +87,6 @@ export function GmailDashboard() {
         await loadMessages();
       }
     } catch (error) {
-      console.error('Error syncing Gmail:', error);
     } finally {
       setSyncing(false);
     }
@@ -107,7 +104,6 @@ export function GmailDashboard() {
         prev.map((m) => (m.id === messageId ? { ...m, is_read: isRead } : m))
       );
     } catch (error) {
-      console.error('Error updating message:', error);
     }
   };
 
@@ -127,15 +123,14 @@ export function GmailDashboard() {
         setProfile({ ...profile, ai_insights_enabled: newValue });
       }
     } catch (error) {
-      console.error('Error toggling AI insights:', error);
     }
   };
 
   const filteredMessages = messages.filter((msg) =>
     searchQuery
       ? msg.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        msg.from_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        msg.snippet.toLowerCase().includes(searchQuery.toLowerCase())
+      msg.from_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      msg.snippet.toLowerCase().includes(searchQuery.toLowerCase())
       : true
   );
 
@@ -223,18 +218,16 @@ export function GmailDashboard() {
         </div>
       </div>
 
-      <div className={`bg-white border rounded-xl p-4 transition-colors ${
-        profile.ai_insights_enabled
+      <div className={`bg-white border rounded-xl p-4 transition-colors ${profile.ai_insights_enabled
           ? 'border-purple-200 bg-purple-50/30'
           : 'border-neutral-200'
-      }`}>
+        }`}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-              profile.ai_insights_enabled
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${profile.ai_insights_enabled
                 ? 'bg-purple-100'
                 : 'bg-neutral-100'
-            }`}>
+              }`}>
               {profile.ai_insights_enabled ? (
                 <Brain className="w-5 h-5 text-purple-600" />
               ) : (
@@ -259,14 +252,12 @@ export function GmailDashboard() {
           </div>
           <button
             onClick={handleToggleAI}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
-              profile.ai_insights_enabled ? 'bg-purple-600' : 'bg-neutral-300'
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${profile.ai_insights_enabled ? 'bg-purple-600' : 'bg-neutral-300'
+              }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                profile.ai_insights_enabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${profile.ai_insights_enabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
             />
           </button>
         </div>
@@ -286,11 +277,10 @@ export function GmailDashboard() {
                 <button
                   key={f.id}
                   onClick={() => setFilter(f.id as any)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    filter === f.id
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${filter === f.id
                       ? 'bg-neutral-900 text-white'
                       : 'text-neutral-600 hover:bg-neutral-100'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   {f.label}
@@ -335,9 +325,8 @@ export function GmailDashboard() {
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-                        message.is_read ? 'bg-neutral-100 text-neutral-600' : 'bg-blue-100 text-blue-700'
-                      }`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${message.is_read ? 'bg-neutral-100 text-neutral-600' : 'bg-blue-100 text-blue-700'
+                        }`}
                     >
                       {message.from_name.charAt(0).toUpperCase()}
                     </div>
@@ -346,9 +335,8 @@ export function GmailDashboard() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p
-                        className={`text-sm truncate ${
-                          message.is_read ? 'font-normal text-neutral-700' : 'font-semibold text-neutral-900'
-                        }`}
+                        className={`text-sm truncate ${message.is_read ? 'font-normal text-neutral-700' : 'font-semibold text-neutral-900'
+                          }`}
                       >
                         {message.from_name}
                       </p>
@@ -360,9 +348,8 @@ export function GmailDashboard() {
                     </div>
 
                     <p
-                      className={`text-sm mb-1 ${
-                        message.is_read ? 'font-normal text-neutral-600' : 'font-semibold text-neutral-900'
-                      }`}
+                      className={`text-sm mb-1 ${message.is_read ? 'font-normal text-neutral-600' : 'font-semibold text-neutral-900'
+                        }`}
                     >
                       {message.subject || '(No Subject)'}
                     </p>

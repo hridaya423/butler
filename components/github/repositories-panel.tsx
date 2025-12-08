@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -48,7 +48,6 @@ export function RepositoriesPanel() {
       if (error) throw error;
       setRepos(data || []);
     } catch (error) {
-      console.error('Error loading repositories:', error);
     } finally {
       setLoading(false);
     }

@@ -58,6 +58,7 @@ import {
   getDailyStats,
   getMonthlyRevenue,
 } from '@/lib/supabase/payments';
+import { ContextAwareWrapper } from '../ai/context-aware-wrapper';
 
 const COLORS = {
   primary: '#FB7C1C',
@@ -104,7 +105,6 @@ export function AnalyticsDashboard() {
       setDailyStats(dailyData);
       setMonthlyRevenue(monthlyData);
     } catch (error) {
-      console.error('Error loading analytics:', error);
     } finally {
       setLoading(false);
     }
@@ -214,34 +214,42 @@ export function AnalyticsDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={<DollarSign className="w-5 h-5" />}
-          label="Total Revenue"
-          value={formatCurrency(stats?.total_revenue || 0)}
-          trend={null}
-          color="green"
-        />
-        <StatCard
-          icon={<CreditCard className="w-5 h-5" />}
-          label="Total Payments"
-          value={stats?.payment_count?.toString() || '0'}
-          trend={null}
-          color="blue"
-        />
-        <StatCard
-          icon={<TrendingUp className="w-5 h-5" />}
-          label="Monthly Recurring"
-          value={formatCurrency(stats?.monthly_recurring_revenue || 0)}
-          trend={null}
-          color="purple"
-        />
-        <StatCard
-          icon={<Users className="w-5 h-5" />}
-          label="Active Subscriptions"
-          value={stats?.active_subscriptions?.toString() || '0'}
-          trend={null}
-          color="orange"
-        />
+        <ContextAwareWrapper contextType="revenue" data={{ metric: "Total Revenue", value: stats?.total_revenue }}>
+          <StatCard
+            icon={<DollarSign className="w-5 h-5" />}
+            label="Total Revenue"
+            value={formatCurrency(stats?.total_revenue || 0)}
+            trend={null}
+            color="green"
+          />
+        </ContextAwareWrapper>
+        <ContextAwareWrapper contextType="revenue" data={{ metric: "Total Payments", value: stats?.payment_count }}>
+          <StatCard
+            icon={<CreditCard className="w-5 h-5" />}
+            label="Total Payments"
+            value={stats?.payment_count?.toString() || '0'}
+            trend={null}
+            color="blue"
+          />
+        </ContextAwareWrapper>
+        <ContextAwareWrapper contextType="revenue" data={{ metric: "Monthly Recurring Revenue", value: stats?.monthly_recurring_revenue }}>
+          <StatCard
+            icon={<TrendingUp className="w-5 h-5" />}
+            label="Monthly Recurring"
+            value={formatCurrency(stats?.monthly_recurring_revenue || 0)}
+            trend={null}
+            color="purple"
+          />
+        </ContextAwareWrapper>
+        <ContextAwareWrapper contextType="revenue" data={{ metric: "Active Subscriptions", value: stats?.active_subscriptions }}>
+          <StatCard
+            icon={<Users className="w-5 h-5" />}
+            label="Active Subscriptions"
+            value={stats?.active_subscriptions?.toString() || '0'}
+            trend={null}
+            color="orange"
+          />
+        </ContextAwareWrapper>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -563,46 +571,47 @@ export function AnalyticsDashboard() {
                 </tr>
               ) : (
                 recentPayments.map((payment, index) => (
-                  <motion.tr
-                    key={payment.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-neutral-50/50 transition-colors"
-                  >
-                    <td className="py-4 px-6">
-                      <span className="text-sm font-medium text-neutral-900">
-                        {payment.project_name || 'N/A'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="text-sm text-neutral-600">
-                        {payment.description || 'Payment'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="text-sm font-semibold text-neutral-900">
-                        {formatCurrency(payment.amount, payment.currency)}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="text-sm text-neutral-500">
-                        {payment.paid_at
-                          ? new Date(payment.paid_at).toLocaleDateString()
-                          : 'N/A'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <Badge className={`text-[10px] h-5 px-2 ${getStatusBadgeClass(payment.status)}`}>
-                        {payment.status}
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-neutral-900">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </motion.tr>
+                  <ContextAwareWrapper key={payment.id} contextType="payment" data={payment} className="contents">
+                    <motion.tr
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="hover:bg-neutral-50/50 transition-colors cursor-pointer"
+                    >
+                      <td className="py-4 px-6">
+                        <span className="text-sm font-medium text-neutral-900">
+                          {payment.project_name || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="text-sm text-neutral-600">
+                          {payment.description || 'Payment'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="text-sm font-semibold text-neutral-900">
+                          {formatCurrency(payment.amount, payment.currency)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="text-sm text-neutral-500">
+                          {payment.paid_at
+                            ? new Date(payment.paid_at).toLocaleDateString()
+                            : 'N/A'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <Badge className={`text-[10px] h-5 px-2 ${getStatusBadgeClass(payment.status)}`}>
+                          {payment.status}
+                        </Badge>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-neutral-900">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </motion.tr>
+                  </ContextAwareWrapper>
                 ))
               )}
             </tbody>

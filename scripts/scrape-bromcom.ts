@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import puppeteer, { type LaunchOptions } from 'puppeteer';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -19,12 +19,11 @@ interface Assignment {
 }
 
 export async function scrapeBromcom(email: string, password: string): Promise<Assignment[]> {
-  console.log('🚀 Starting Bromcom scraper...');
 
   const headlessPreference = process.env.PUPPETEER_HEADLESS?.toLowerCase();
   const headlessMode = headlessPreference === 'false' ? false : true;
 
-  const launchOptions: LaunchOptions = {headless: headlessMode,args: ['--no-sandbox', '--disable-setuid-sandbox'], defaultViewport: { width: 1280, height: 720 }  };
+  const launchOptions: LaunchOptions = { headless: headlessMode, args: ['--no-sandbox', '--disable-setuid-sandbox'], defaultViewport: { width: 1280, height: 720 } };
 
   if (process.env.PUPPETEER_EXECUTABLE_PATH) {
     launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
@@ -40,7 +39,6 @@ export async function scrapeBromcom(email: string, password: string): Promise<As
       timeout: 60000
     });
 
-    console.log('🔐 Clicking Microsoft login button...');
     await page.waitForSelector('a[id="btnLinkMicrosoftAccount"]', { timeout: 10000 });
     await Promise.all([
       page.click('a[id="btnLinkMicrosoftAccount"]'),
@@ -72,7 +70,6 @@ export async function scrapeBromcom(email: string, password: string): Promise<As
         await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 });
       }
     } catch (e) {
-      console.log('ℹ️  No stay signed in prompt found, continuing...');
     }
 
     await page.waitForSelector('aside#sidebar-left', { timeout: 30000 });
@@ -137,12 +134,9 @@ export async function scrapeBromcom(email: string, password: string): Promise<As
       return results;
     }) as Assignment[];
 
-    console.log(`✅ Found ${assignments.length} homework assignments`);
-
     return assignments;
 
   } catch (error) {
-    console.error('❌ Error scraping Bromcom:', error);
     throw error;
   } finally {
     await browser.close();
@@ -154,17 +148,13 @@ if (require.main === module) {
   const password = process.env.BROMCOM_PASSWORD;
 
   if (!email || !password) {
-    console.error('❌ Please set BROMCOM_EMAIL and BROMCOM_PASSWORD in .env.local');
     process.exit(1);
   }
 
   scrapeBromcom(email, password)
     .then(assignments => {
-      console.log('\n📋 Homework Assignments:');
-      console.log(JSON.stringify(assignments, null, 2));
     })
     .catch(error => {
-      console.error('Fatal error:', error);
       process.exit(1);
     });
 }

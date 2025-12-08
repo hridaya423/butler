@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,6 +7,7 @@ import { GitPullRequest, GitMerge, ExternalLink, X, MessageCircle } from 'lucide
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { createClient } from '@/lib/supabase/client';
+import { ContextAwareWrapper } from '../ai/context-aware-wrapper';
 
 interface PullRequest {
   id: string;
@@ -55,7 +56,6 @@ export function PullRequestsPanel() {
       if (error) throw error;
       setPrs(data || []);
     } catch (error) {
-      console.error('Error loading PRs:', error);
     } finally {
       setLoading(false);
     }
@@ -123,114 +123,115 @@ export function PullRequestsPanel() {
             <GitPullRequest className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
             <p className="text-sm text-neutral-500 font-light">No pull requests found</p>
           </Card>
-        ) : ( 
+        ) : (
           filteredPRs.map((pr, index) => (
-            <motion.div
-              key={pr.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card className="border-neutral-100 shadow-sm rounded-2xl bg-white p-4 hover:shadow-md transition-all duration-300">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${pr.is_merged ? 'bg-purple-100' :
-                      pr.state === 'open' ? 'bg-green-100' : 'bg-neutral-100'
-                      }`}>
-                      {pr.is_merged ? (
-                        <GitMerge className="w-5 h-5 text-purple-600" />
-                      ) : pr.state === 'open' ? (
-                        <GitPullRequest className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <X className="w-5 h-5 text-neutral-600" />
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <a
-                          href={pr.html_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium text-neutral-900 hover:text-orange-600 transition-colors"
-                        >
-                          {pr.title}
-                        </a>
-                        <ExternalLink className="w-3 h-3 text-neutral-400" />
-                      </div>
-
-                      <div className="flex items-center gap-2 mb-2 text-xs text-neutral-500">
-                        <span className="font-mono">{pr.repo_full_name}</span>
-                        <span>•</span>
-                        <span>#{pr.github_pr_number}</span>
-                        <span>•</span>
-                        <span>{pr.head_branch} → {pr.base_branch}</span>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {pr.is_draft && (
-                          <Badge className="bg-neutral-100 text-neutral-700 border-neutral-200 text-xs">
-                            Draft
-                          </Badge>
-                        )}
-                        {pr.is_merged && (
-                          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
-                            <GitMerge className="w-3 h-3 mr-1" />
-                            Merged
-                          </Badge>
-                        )}
-                        {pr.state === 'open' && !pr.is_merged && (
-                          <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
-                            Open
-                          </Badge>
-                        )}
-                        {pr.state === 'closed' && !pr.is_merged && (
-                          <Badge className="bg-neutral-100 text-neutral-700 border-neutral-200 text-xs">
-                            Closed
-                          </Badge>
-                        )}
-
-                        {pr.labels && JSON.parse(pr.labels).length > 0 && (
-                          JSON.parse(pr.labels).slice(0, 3).map((label: any, i: number) => (
-                            <Badge
-                              key={i}
-                              className="text-xs"
-                              style={{
-                                backgroundColor: `#${label.color}20`,
-                                color: `#${label.color}`,
-                                borderColor: `#${label.color}40`,
-                              }}
-                            >
-                              {label.name}
-                            </Badge>
-                          ))
+            <ContextAwareWrapper key={pr.id} contextType="github_pr" data={pr} className="block">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card className="border-neutral-100 shadow-sm rounded-2xl bg-white p-4 hover:shadow-md transition-all duration-300">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${pr.is_merged ? 'bg-purple-100' :
+                        pr.state === 'open' ? 'bg-green-100' : 'bg-neutral-100'
+                        }`}>
+                        {pr.is_merged ? (
+                          <GitMerge className="w-5 h-5 text-purple-600" />
+                        ) : pr.state === 'open' ? (
+                          <GitPullRequest className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <X className="w-5 h-5 text-neutral-600" />
                         )}
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="text-right flex-shrink-0">
-                    <div className="flex items-center gap-3 text-xs text-neutral-500 mb-2">
-                      {pr.comments_count > 0 && (
-                        <div className="flex items-center gap-1">
-                          <MessageCircle className="w-3 h-3" />
-                          {pr.comments_count}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <a
+                            href={pr.html_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-neutral-900 hover:text-orange-600 transition-colors"
+                          >
+                            {pr.title}
+                          </a>
+                          <ExternalLink className="w-3 h-3 text-neutral-400" />
                         </div>
-                      )}
-                      <div className="flex items-center gap-1 text-green-600">
-                        +{pr.additions}
-                      </div>
-                      <div className="flex items-center gap-1 text-red-600">
-                        -{pr.deletions}
+
+                        <div className="flex items-center gap-2 mb-2 text-xs text-neutral-500">
+                          <span className="font-mono">{pr.repo_full_name}</span>
+                          <span>•</span>
+                          <span>#{pr.github_pr_number}</span>
+                          <span>•</span>
+                          <span>{pr.head_branch} → {pr.base_branch}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {pr.is_draft && (
+                            <Badge className="bg-neutral-100 text-neutral-700 border-neutral-200 text-xs">
+                              Draft
+                            </Badge>
+                          )}
+                          {pr.is_merged && (
+                            <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                              <GitMerge className="w-3 h-3 mr-1" />
+                              Merged
+                            </Badge>
+                          )}
+                          {pr.state === 'open' && !pr.is_merged && (
+                            <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
+                              Open
+                            </Badge>
+                          )}
+                          {pr.state === 'closed' && !pr.is_merged && (
+                            <Badge className="bg-neutral-100 text-neutral-700 border-neutral-200 text-xs">
+                              Closed
+                            </Badge>
+                          )}
+
+                          {pr.labels && JSON.parse(pr.labels).length > 0 && (
+                            JSON.parse(pr.labels).slice(0, 3).map((label: any, i: number) => (
+                              <Badge
+                                key={i}
+                                className="text-xs"
+                                style={{
+                                  backgroundColor: `#${label.color}20`,
+                                  color: `#${label.color}`,
+                                  borderColor: `#${label.color}40`,
+                                }}
+                              >
+                                {label.name}
+                              </Badge>
+                            ))
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <p className="text-xs text-neutral-400">
-                      {new Date(pr.github_updated_at).toLocaleDateString()}
-                    </p>
+
+                    <div className="text-right flex-shrink-0">
+                      <div className="flex items-center gap-3 text-xs text-neutral-500 mb-2">
+                        {pr.comments_count > 0 && (
+                          <div className="flex items-center gap-1">
+                            <MessageCircle className="w-3 h-3" />
+                            {pr.comments_count}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 text-green-600">
+                          +{pr.additions}
+                        </div>
+                        <div className="flex items-center gap-1 text-red-600">
+                          -{pr.deletions}
+                        </div>
+                      </div>
+                      <p className="text-xs text-neutral-400">
+                        {new Date(pr.github_updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </motion.div>
+                </Card>
+              </motion.div>
+            </ContextAwareWrapper>
           ))
         )}
       </div>

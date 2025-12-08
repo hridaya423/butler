@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -45,7 +45,6 @@ export function CommitsPanel() {
       if (error) throw error;
       setCommits(data || []);
     } catch (error) {
-      console.error('Error loading commits:', error);
     } finally {
       setLoading(false);
     }

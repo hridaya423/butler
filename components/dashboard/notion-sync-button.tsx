@@ -21,13 +21,11 @@ export function NotionSyncButton({ onSyncComplete }: { onSyncComplete?: () => vo
       }
 
       const data = await response.json();
-      console.log(`Synced ${data.itemsProcessed} tasks from Notion`);
 
       if (onSyncComplete) {
         onSyncComplete();
       }
     } catch (err) {
-      console.error("Notion sync failed:", err);
       if (err instanceof Error && err.message.includes('not connected')) {
         window.location.href = '/dashboard?section=settings&tab=accounts';
       }

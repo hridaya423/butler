@@ -9,10 +9,6 @@ export function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('❌ Supabase env vars not set!');
-    console.error('Add to .env.local:');
-    console.error('NEXT_PUBLIC_SUPABASE_URL=your-url');
-    console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key');
     throw new Error(
       'Missing Supabase credentials. Check .env.local file.'
     );

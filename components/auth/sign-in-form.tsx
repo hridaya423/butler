@@ -53,7 +53,6 @@ export function SignInForm() {
         router.push("/dashboard");
       }
     } catch (err) {
-      console.error("Auth error:", err);
       const message = err instanceof Error ? err.message : "Authentication failed";
       setError(message);
       setLoading(false);

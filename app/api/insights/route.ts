@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateAssignmentInsights } from '@/lib/ai/groq';
+import { generateAssignmentInsights } from '@/lib/ai/client';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
       .limit(10);
 
     if (assignmentsError) {
-      console.error('Error fetching assignments:', assignmentsError);
       return respond({ error: 'Failed to fetch assignments' }, { status: 500 });
     }
 
@@ -54,7 +53,6 @@ export async function GET(request: NextRequest) {
     const insights = await generateAssignmentInsights(safeAssignments);
     return respond({ insights });
   } catch (error) {
-    console.error('AI insights error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return respond(
       { error: 'Failed to generate insights', details: errorMessage },

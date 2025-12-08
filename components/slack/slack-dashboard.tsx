@@ -49,7 +49,6 @@ export function SlackDashboard() {
         setProfile(data.profile);
       }
     } catch (error) {
-      console.error('Error loading Slack profile:', error);
     } finally {
       setLoading(false);
     }
@@ -63,7 +62,6 @@ export function SlackDashboard() {
         setNotificationSummary(data.summary);
       }
     } catch (error) {
-      console.error('Error loading notification summary:', error);
     }
   };
 
@@ -77,7 +75,6 @@ export function SlackDashboard() {
         window.location.reload();
       }
     } catch (error) {
-      console.error('Error syncing Slack data:', error);
     } finally {
       setSyncing(false);
     }
@@ -149,7 +146,7 @@ export function SlackDashboard() {
                 {profile.slack_team_name}
                 <ExternalLink className="w-3 h-3" />
               </a>
-              
+
               {notificationSummary && (
                 <div className="flex items-center gap-4 text-xs font-medium text-neutral-600">
                   <div className="flex items-center gap-1.5 bg-orange-50 px-2 py-1 rounded-md border border-orange-100">

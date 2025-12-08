@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { createClient } from './client';
 import type {
   Payment,
@@ -33,7 +33,6 @@ export async function getPayments(status?: string, limit = 50): Promise<Payment[
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching payments:', error);
     throw error;
   }
 
@@ -57,7 +56,6 @@ export async function getPaymentById(id: string): Promise<Payment | null> {
     .single();
 
   if (error) {
-    console.error('Error fetching payment:', error);
     return null;
   }
 
@@ -81,7 +79,6 @@ export async function getPaymentsByProject(projectName: string): Promise<Payment
     .order('paid_at', { ascending: false, nullsFirst: false });
 
   if (error) {
-    console.error('Error fetching payments by project:', error);
     throw error;
   }
 
@@ -110,7 +107,6 @@ export async function getSubscriptions(status?: string): Promise<Subscription[]>
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching subscriptions:', error);
     throw error;
   }
 
@@ -147,7 +143,6 @@ export async function getPaymentNotifications(
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching notifications:', error);
     throw error;
   }
 
@@ -163,7 +158,6 @@ export async function markNotificationAsRead(notificationId: string): Promise<vo
     .eq('id', notificationId);
 
   if (error) {
-    console.error('Error marking notification as read:', error);
     throw error;
   }
 }
@@ -184,7 +178,6 @@ export async function markAllNotificationsAsRead(): Promise<void> {
     .eq('is_read', false);
 
   if (error) {
-    console.error('Error marking all notifications as read:', error);
     throw error;
   }
 }
@@ -225,9 +218,9 @@ export async function getPaymentStats(): Promise<PaymentStats> {
   const lastPaymentDate =
     payments && payments.length > 0
       ? payments.reduce((latest: string | null, p: any) => {
-          if (!p.paid_at) return latest;
-          return !latest || new Date(p.paid_at) > new Date(latest) ? p.paid_at : latest;
-        }, null as string | null)
+        if (!p.paid_at) return latest;
+        return !latest || new Date(p.paid_at) > new Date(latest) ? p.paid_at : latest;
+      }, null as string | null)
       : null;
 
   const activeSubscriptions = subscriptions?.length || 0;
@@ -328,7 +321,6 @@ export async function getDailyStats(days = 30): Promise<DailyPaymentStat[]> {
     .order('date', { ascending: true });
 
   if (error) {
-    console.error('Error fetching daily stats:', error);
     throw error;
   }
 
@@ -352,7 +344,6 @@ export async function getMonthlyRevenue(months = 12): Promise<MonthlyRevenue[]> 
     .order('month', { ascending: true });
 
   if (error) {
-    console.error('Error fetching monthly revenue:', error);
     throw error;
   }
 

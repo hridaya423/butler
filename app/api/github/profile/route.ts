@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/route-handler-client';
 
@@ -27,7 +27,6 @@ export async function GET() {
 
     return NextResponse.json({ profile });
   } catch (error: any) {
-    console.error('Error fetching GitHub profile:', error);
     return NextResponse.json(
       { error: 'Failed to fetch profile', message: error.message },
       { status: 500 }

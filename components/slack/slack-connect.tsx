@@ -37,7 +37,6 @@ export function SlackConnect({
       window.location.href = data.url;
 
     } catch (error) {
-      console.error('Error connecting to Slack:', error);
       alert('Failed to connect to Slack. Please try again.');
       setConnecting(false);
     }
