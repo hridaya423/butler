@@ -105,9 +105,9 @@ export function SparxDashboard() {
 
             await fetchHomework();
             await checkConnection();
-            toast.success("Sparx data synced!");
+            toast("Sparx data synced!", { icon: "✅" });
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Failed to sync Sparx");
+            toast(error instanceof Error ? error.message : "Failed to sync Sparx", { icon: "❌" });
         } finally {
             setSyncing(false);
         }
@@ -138,7 +138,7 @@ export function SparxDashboard() {
 
     return (
         <div className="space-y-6">
-            {}
+            { }
             <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-100 rounded-2xl p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
                     <Calculator className="w-32 h-32" />
@@ -174,7 +174,7 @@ export function SparxDashboard() {
                     </Button>
                 </div>
 
-                {}
+                { }
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
                     {homeworkTypes.map((type) => {
                         const Icon = type.icon;
@@ -205,7 +205,7 @@ export function SparxDashboard() {
                 </div>
             </div>
 
-            {}
+            { }
             <div className="space-y-4">
                 {activeHomework.length === 0 ? (
                     <div className="text-center py-12 bg-white border border-neutral-100 rounded-2xl">
@@ -247,7 +247,7 @@ export function SparxDashboard() {
                                             </Badge>
                                         </div>
 
-                                        {}
+                                        { }
                                         <div className="flex items-center gap-3">
                                             <div className="flex-1 h-2 bg-neutral-100 rounded-full overflow-hidden">
                                                 <div
@@ -260,7 +260,7 @@ export function SparxDashboard() {
                                             </span>
                                         </div>
 
-                                        {}
+                                        { }
                                         <div className="flex items-center gap-4">
                                             {hw.due_date && (
                                                 <div className="flex items-center gap-1.5 text-xs text-neutral-500">
@@ -293,7 +293,7 @@ export function SparxDashboard() {
                                             )}
                                         </div>
 
-                                        {}
+                                        { }
                                         {hw.topics && hw.topics.length > 0 && (
                                             <div className="flex items-center gap-2 flex-wrap pt-1">
                                                 {hw.topics.slice(0, 3).map((topic, i) => (
