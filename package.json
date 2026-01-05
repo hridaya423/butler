@@ -26,7 +26,7 @@
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.25",
     "jspdf": "^3.0.4",
-    "jspdf-autotable": "^5.0.2",
+    "jspdf-autotable": "^5.0.7",
     "katex": "^0.16.26",
     "lucide-react": "^0.562.0",
     "motion": "^12.24.0",
