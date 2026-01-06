@@ -248,6 +248,10 @@ export function ConnectedAccounts() {
         options.scopes = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify';
       }
 
+      if (provider === 'github') {
+        options.scopes = 'repo read:user user:email';
+      }
+
       if (provider === 'notion') {
         options.queryParams = {
           owner: 'user',
