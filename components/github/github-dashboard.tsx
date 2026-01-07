@@ -96,7 +96,7 @@ export function GitHubDashboard() {
                 provider: 'github',
                 options: {
                   redirectTo: `${window.location.origin}/auth/callback`,
-                  scopes: 'read:user user:email repo'
+                  scopes: 'repo read:user user:email'
                 }
               });
               if (error) {
@@ -136,13 +136,19 @@ export function GitHubDashboard() {
     setIsAnalyzing(true);
     try {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsAnalyzing(false);
+        return;
+      }
+
       if (activeTab === 'issues') {
-        const { data } = await supabase.from('github_issues').select('*').order('github_updated_at', { ascending: false });
+        const { data } = await supabase.from('github_issues').select('*').eq('user_id', user.id).order('github_updated_at', { ascending: false });
         if (data && data.length > 0) {
           generateIssueInsights(data);
         }
       } else if (activeTab === 'prs') {
-        const { data } = await supabase.from('github_pull_requests').select('*').order('github_created_at', { ascending: false });
+        const { data } = await supabase.from('github_pull_requests').select('*').eq('user_id', user.id).order('github_created_at', { ascending: false });
         if (data && data.length > 0) {
           generatePRInsights(data);
         }

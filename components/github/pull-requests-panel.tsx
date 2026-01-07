@@ -46,12 +46,17 @@ export function PullRequestsPanel() {
     setLoading(true);
     try {
       const supabase = createClient();
-      const query = supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
         .from('github_pull_requests')
         .select('*')
+        .eq('user_id', user.id)
         .order('github_updated_at', { ascending: false });
-
-      const { data, error } = await query;
 
       if (error) throw error;
       setPrs(data || []);

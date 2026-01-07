@@ -155,7 +155,7 @@ export function UniversalSyncButton({ onSyncComplete }: { onSyncComplete?: () =>
                                 provider: providerKey as 'github' | 'slack',
                                 options: {
                                     redirectTo: `${window.location.origin}/auth/callback`,
-                                    scopes: providerKey === 'github' ? 'read:user user:email repo' : 'channels:read chat:write',
+                                    scopes: providerKey === 'github' ? 'repo read:user user:email' : 'channels:read chat:write',
                                     skipBrowserRedirect: false
                                 }
                             });

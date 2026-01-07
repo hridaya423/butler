@@ -42,9 +42,16 @@ export function IssuesPanel() {
     setLoading(true);
     try {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('github_issues')
         .select('*')
+        .eq('user_id', user.id)
         .order('github_updated_at', { ascending: false });
 
       if (error) throw error;
