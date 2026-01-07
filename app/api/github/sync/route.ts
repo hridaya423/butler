@@ -16,11 +16,22 @@ export async function POST() {
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
-    const providerToken = session?.provider_token;
+    let providerToken = session?.provider_token;
+
+    if (!providerToken) {
+      const { data: githubProfile } = await supabase
+        .from('github_profiles')
+        .select('access_token')
+        .eq('user_id', user.id)
+        .single();
+
+      providerToken = githubProfile?.access_token;
+    }
 
     if (!providerToken) {
       return NextResponse.json({
@@ -61,6 +72,7 @@ export async function POST() {
       public_gists: profile.public_gists,
       followers: profile.followers,
       following: profile.following,
+      access_token: providerToken,
       last_synced_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
 

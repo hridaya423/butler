@@ -27,7 +27,7 @@ export async function POST() {
         stripeKey = stripeKey.trim();
 
         const stripe = new Stripe(stripeKey, {
-            apiVersion: '2025-11-17.clover',
+            apiVersion: '2025-12-15.clover',
         });
         const charges = await stripe.charges.list({ limit: 100 });
 

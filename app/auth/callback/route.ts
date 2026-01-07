@@ -8,8 +8,30 @@ export async function GET(request: Request) {
 
     if (code) {
         const supabase = await createClient();
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (!error && data.session) {
+          
+            const providerToken = data.session.provider_token;
+            const user = data.session.user;
+
+            if (providerToken && user) {
+                const githubIdentity = user.identities?.find(id => id.provider === 'github');
+
+                if (githubIdentity) {
+                    await supabase.from('github_profiles').upsert({
+                        user_id: user.id,
+                        github_user_id: githubIdentity.id,
+                        github_username: (githubIdentity.identity_data as any)?.user_name || (githubIdentity.identity_data as any)?.preferred_username,
+                        github_name: (githubIdentity.identity_data as any)?.full_name || (githubIdentity.identity_data as any)?.name,
+                        github_avatar_url: (githubIdentity.identity_data as any)?.avatar_url,
+                        github_email: (githubIdentity.identity_data as any)?.email,
+                        access_token: providerToken,
+                        last_synced_at: new Date().toISOString(),
+                    }, { onConflict: 'user_id' });
+                }
+            }
+
             return NextResponse.redirect(`${origin}${next}`);
         }
     }
