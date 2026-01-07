@@ -1,12 +1,17 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 const GITHUB_API = 'https://api.github.com';
 
 export async function POST() {
+  const errors: string[] = [];
+  const debugInfo: Record<string, any> = {};
+
   try {
     const supabase = await createClient();
+    const supabaseAdmin = createServiceRoleClient();
 
     const {
       data: { user },
@@ -58,7 +63,7 @@ export async function POST() {
 
     const profile = await profileResponse.json();
 
-    const { error: profileError } = await supabase.from('github_profiles').upsert({
+    const { error: profileError } = await supabaseAdmin.from('github_profiles').upsert({
       user_id: user.id,
       github_user_id: profile.id.toString(),
       github_username: profile.login,
@@ -92,6 +97,7 @@ export async function POST() {
 
     if (reposResponse.ok) {
       const repos = await reposResponse.json();
+      debugInfo.reposFromGitHub = repos.length;
 
       const repoData = repos.map((repo: any) => ({
         user_id: user.id,
@@ -118,8 +124,16 @@ export async function POST() {
       }));
 
       if (repoData.length > 0) {
-        await supabase.from('github_repositories').upsert(repoData, { onConflict: 'github_repo_id' });
+        const { error: repoError } = await supabaseAdmin.from('github_repositories').upsert(repoData, { onConflict: 'github_repo_id' });
+        if (repoError) {
+          errors.push(`Repos: ${repoError.message} (${repoError.code})`);
+          debugInfo.repoError = repoError;
+        } else {
+          debugInfo.reposInserted = repoData.length;
+        }
       }
+    } else {
+      errors.push(`GitHub repos API returned ${reposResponse.status}`);
     }
 
     const prsResponse = await fetch(
@@ -186,7 +200,7 @@ export async function POST() {
       }));
 
       if (prData.length > 0) {
-        await supabase.from('github_pull_requests').upsert(prData, { onConflict: 'github_pr_id' });
+        await supabaseAdmin.from('github_pull_requests').upsert(prData, { onConflict: 'github_pr_id' });
       }
     }
 
@@ -234,7 +248,7 @@ export async function POST() {
       });
 
       if (issueData.length > 0) {
-        await supabase.from('github_issues').upsert(issueData, { onConflict: 'github_issue_id' });
+        await supabaseAdmin.from('github_issues').upsert(issueData, { onConflict: 'github_issue_id' });
       }
     }
 
@@ -274,13 +288,15 @@ export async function POST() {
       });
 
       if (commits.length > 0) {
-        await supabase.from('github_commits').upsert(commits.slice(0, 100), { onConflict: 'commit_sha' });
+        await supabaseAdmin.from('github_commits').upsert(commits.slice(0, 100), { onConflict: 'commit_sha' });
       }
     }
 
 
     return NextResponse.json({
-      success: true,
+      success: errors.length === 0,
+      errors: errors.length > 0 ? errors : undefined,
+      debug: debugInfo,
       synced: {
         profile: true,
         repositories: true,

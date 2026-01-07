@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/route-handler-client';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
@@ -11,7 +12,6 @@ export async function GET(request: Request) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error && data.session) {
-          
             const providerToken = data.session.provider_token;
             const user = data.session.user;
 
@@ -19,7 +19,8 @@ export async function GET(request: Request) {
                 const githubIdentity = user.identities?.find(id => id.provider === 'github');
 
                 if (githubIdentity) {
-                    await supabase.from('github_profiles').upsert({
+                    const supabaseAdmin = createServiceRoleClient();
+                    await supabaseAdmin.from('github_profiles').upsert({
                         user_id: user.id,
                         github_user_id: githubIdentity.id,
                         github_username: (githubIdentity.identity_data as any)?.user_name || (githubIdentity.identity_data as any)?.preferred_username,

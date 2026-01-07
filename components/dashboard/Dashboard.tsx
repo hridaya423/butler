@@ -135,15 +135,18 @@ export function Dashboard({ onBack }: DashboardProps) {
 
   useEffect(() => {
     const fetchMemories = async () => {
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
-      const { data } = await supabase
-        .from('memories')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(3);
+      try {
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('memories')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
 
-      if (data) setMemories(data);
+        if (!error && data) setMemories(data);
+      } catch {
+      }
     };
     fetchMemories();
   }, []);
