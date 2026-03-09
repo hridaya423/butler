@@ -27,7 +27,7 @@
     "framer-motion": "^12.35.2",
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
-    "katex": "^0.16.33",
+    "katex": "^0.16.38",
     "lucide-react": "^0.577.0",
     "motion": "^12.34.4",
     "next": "16.1.6",
